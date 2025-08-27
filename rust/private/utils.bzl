@@ -15,7 +15,6 @@
 """Utility functions not specific to the rust toolchain."""
 
 load("@bazel_skylib//lib:paths.bzl", "paths")
-load("@rules_cc//cc:find_cc_toolchain.bzl", find_rules_cc_toolchain = "find_cc_toolchain")
 load("@rules_cc//cc/common:cc_common.bzl", "cc_common")
 load("@rules_cc//cc/common:cc_info.bzl", "CcInfo")
 load(":compat.bzl", "abs")
@@ -78,9 +77,12 @@ def find_cc_toolchain(ctx, extra_unsupported_features = tuple()):
         extra_unsupported_features (sequence of str): Extra featrures to disable
 
     Returns:
-        tuple: A tuple of (CcToolchain, FeatureConfiguration)
+        tuple: A tuple of (CcToolchain, FeatureConfiguration) or (None, None) if no C++ toolchain is available
     """
-    cc_toolchain = find_rules_cc_toolchain(ctx)
+    # C++ toolchain is optional, so we need to check if it's available
+    cc_toolchain = ctx.toolchains.get("@bazel_tools//tools/cpp:toolchain_type")
+    if not cc_toolchain:
+        return None, None
 
     feature_configuration = cc_common.configure_features(
         ctx = ctx,
