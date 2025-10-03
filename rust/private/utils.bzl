@@ -15,7 +15,6 @@
 """Utility functions not specific to the rust toolchain."""
 
 load("@bazel_skylib//lib:paths.bzl", "paths")
-load("@rules_cc//cc:find_cc_toolchain.bzl", find_rules_cc_toolchain = "find_cc_toolchain")
 load("@rules_cc//cc/common:cc_common.bzl", "cc_common")
 load("@rules_cc//cc/common:cc_info.bzl", "CcInfo")
 load(":compat.bzl", "abs")
@@ -81,8 +80,14 @@ def find_cc_toolchain(ctx, extra_unsupported_features = tuple()):
         tuple: A tuple of (CcToolchain, FeatureConfiguration) or (None, None) if no C++ toolchain is available
     """
 
-    # C++ toolchain is optional, so we need to check if it's available
-    cc_toolchain = find_rules_cc_toolchain(ctx, mandatory = False)
+    # Try to get the C++ toolchain directly from ctx.toolchains
+    # The toolchain type is marked as mandatory=False in rule definitions,
+    # so it may not be available (e.g., for wasm32 targets)
+    cc_toolchain_type = "@bazel_tools//tools/cpp:toolchain_type"
+    
+    # Check if the toolchain is available
+    # ctx.toolchains is a struct, so we check if the key exists using hasattr or getattr with default
+    cc_toolchain = getattr(ctx.toolchains, cc_toolchain_type, None)
     if not cc_toolchain:
         return None, None
 
