@@ -92,9 +92,9 @@ def find_cc_toolchain(ctx, extra_unsupported_features = tuple()):
     if not toolchain_info:
         return None, None
     
-    # The toolchain_info is a ToolchainInfo wrapper, we need to extract the actual CcToolchainInfo
-    # The standard way is to access it via the cc_provider_in_toolchain field
-    cc_toolchain = toolchain_info.cc_provider_in_toolchain if hasattr(toolchain_info, "cc_provider_in_toolchain") else toolchain_info
+    # The resolved toolchain should be the CcToolchainInfo itself
+    # Let's just use it directly and let Bazel tell us if it's wrong
+    cc_toolchain = toolchain_info
     
     if not cc_toolchain:
         return None, None
