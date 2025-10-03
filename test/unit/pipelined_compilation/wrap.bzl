@@ -105,8 +105,8 @@ wrap = rule(
         ),
     },
     toolchains = [
-        "@rules_rust//rust:toolchain", 
+        "@rules_rust//rust:toolchain",
         config_common.toolchain_type("@bazel_tools//tools/cpp:toolchain_type", mandatory = False),
-        ],
+    ],
     fragments = ["cpp"],
 )
