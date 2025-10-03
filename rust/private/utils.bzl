@@ -82,12 +82,20 @@ def find_cc_toolchain(ctx, extra_unsupported_features = tuple()):
 
     # Try to get the C++ toolchain directly from ctx.toolchains
     # The toolchain type is marked as mandatory=False in rule definitions,
-    # so it may not be available (e.g., for wasm32 targets)
-    cc_toolchain_type = "@bazel_tools//tools/cpp:toolchain_type"
-
-    # Check if the toolchain is available
-    # ctx.toolchains is a struct, so we check if the key exists using hasattr or getattr with default
-    cc_toolchain = getattr(ctx.toolchains, cc_toolchain_type, None)
+    # so it may not be available (e.g., for wasm32 targets or pure Rust builds)
+    
+    # For optional toolchains, we access them directly with bracket notation
+    # If the toolchain is not available (mandatory=False and not resolved),
+    # accessing it will return None
+    toolchain_info = ctx.toolchains["@bazel_tools//tools/cpp:toolchain_type"]
+    
+    if not toolchain_info:
+        return None, None
+    
+    # The toolchain_info is a ToolchainInfo wrapper, we need to extract the actual CcToolchainInfo
+    # The standard way is to access it via the cc_provider_in_toolchain field
+    cc_toolchain = toolchain_info.cc_provider_in_toolchain if hasattr(toolchain_info, "cc_provider_in_toolchain") else toolchain_info
+    
     if not cc_toolchain:
         return None, None
 

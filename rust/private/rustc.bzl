@@ -1786,6 +1786,20 @@ def establish_cc_info(ctx, attr, crate_info, toolchain, cc_toolchain, feature_co
     if getattr(attr, "out_binary", False):
         return []
 
+    # If no C++ toolchain is available, we cannot create CcInfo with cc_common constructs,
+    # but we still need to provide AllocatorLibrariesImplInfo for rlib/lib types
+    if not cc_toolchain:
+        dot_a = None
+        if crate_info.type in ("rlib", "lib"):
+            # Create the .a symlink for allocator library support
+            dot_a = make_static_lib_symlink(ctx.label.package, ctx.actions, crate_info.output)
+            providers = [CcInfo()]
+            providers.append(AllocatorLibrariesImplInfo(static_archive = dot_a))
+            return providers
+        else:
+            # For staticlib/cdylib without a C++ toolchain, just return empty CcInfo
+            return [CcInfo()]
+
     dot_a = None
 
     if crate_info.type == "staticlib":
